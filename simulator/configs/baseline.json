@@ -1,0 +1,9 @@
+{
+  "seed": 42,
+  "customers": 6000,
+  "months": 3,
+  "start": "2026-01-01",
+  "org_id": "00000000-0000-0000-0000-000000000001",
+  "incident_strength": 1.0,
+  "reason_disclosure_rate": 0.65
+}

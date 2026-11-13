@@ -103,3 +103,13 @@ See [the Phase 1 guide](phase-1.md) for the current schema, locking, state proje
 organization scoping, immutable history, atomic outbox, and verification results. The Phase 0
 limitations above describe that earlier milestone. Phase 1 adds those domain components but
 does not add authorization, public deployment, recovery execution, or outbox dispatch.
+
+
+## Phase 2 implementation
+
+The [synthetic ecosystem](phase-2.md) is a versioned offline input/evaluation module with
+separate operational and hidden-truth artifacts. Its API adapter projects only supported
+payment/event inputs; customer/card profiles and feature snapshots remain offline until a
+reviewed ingestion contract is added. No queue consumer reads evaluation truth. PostgreSQL
+remains the operational business source of truth. Policies, financial experiments, detector,
+diagnosis, and SHAP have not been implemented by this generator milestone.

@@ -54,4 +54,17 @@ Configuration, generator version, seeded semantic random streams, and determinis
 identify a dataset. Defaults are historical to remain compatible with simulator ingestion.
 Changing a configuration changes record IDs to prevent silent reuse of source event identities.
 The same software/configuration must reproduce the same data; generator or Python/library
-changes require re-verification. Artifact export and full phase acceptance are in progress.
+changes require re-verification. See [Phase 2](phase-2.md) for canonical exports, checksums, plots, ingestion, and actual
+acceptance results. Observable profiles/features remain offline; only payment/event contracts
+are currently persisted by the adapter. This boundary must be extended before online diagnosis.
+
+
+## Validated default export
+
+The seed-42 default has 18,000 initial attempts and 3,361 failures, spread across all six
+hidden failure categories. Of those failures, 1,151 have no reported reason. Three injected
+incidents are visible in the daily rate chart and have positive paired failure differences.
+These numbers describe version-1 simulation output, not industry statistics. Missing reasons
+are masked randomly among failed attempts; real missingness may be systematic. Profiles are
+fixed baseline metadata for the scenario, including tenure measured at the population start.
+See the Phase 2 guide for actual checks and limitations.

@@ -129,3 +129,15 @@ def test_model_input_allowlist_excludes_identifiers_and_time_keys():
     assert (
         not {"payment_ref", "source_event_id", "org_id", "observed_at"} & row.model_inputs().keys()
     )
+
+
+def test_reason_disclosure_does_not_change_hidden_outcomes():
+    hidden = generate(GeneratorConfig(customers=80, reason_disclosure_rate=0))
+    disclosed = generate(GeneratorConfig(customers=80, reason_disclosure_rate=1))
+    assert [label.true_failure_category for label in hidden.labels] == [
+        label.true_failure_category for label in disclosed.labels
+    ]
+    assert all(attempt.reason is None for attempt in hidden.attempts)
+    assert all(
+        attempt.reason is not None for attempt in disclosed.attempts if attempt.status == "failed"
+    )

@@ -5,8 +5,8 @@ Initial demonstration: one organization, INR, local execution, no real money.
 
 The intended MVP combines degradation detection, failure diagnosis, SHAP, deterministic
 recovery/eligibility, safe execution, auditability, and reproducible monetary experiments.
-**Current implementation: foundations and transactional simulator ingestion.** No recovery
-execution or trained models exist yet. See [Phase 1](docs/phase-1.md) for the domain and API contract.
+**Current implementation: foundations, transactional ingestion, and a reproducible synthetic
+payment ecosystem with injected incidents.** No recovery execution or trained models exist yet. See [Phase 1](docs/phase-1.md) for the domain and API contract.
 See [Phase 0 verification](docs/phase-0.md) and [architecture](docs/architecture.md).
 
 ## Run locally
@@ -63,10 +63,22 @@ If uv's default cache is inaccessible, prefix uv commands with `UV_CACHE_DIR=/tm
 `.env` supplies Compose interpolation; direct Python execution reads the shell's
 `PAYREVIVE_*` environment variables, not `.env` automatically.
 
+## Generate synthetic data
+
+```sh
+uv run python -m simulator.run --config simulator/configs/baseline.json --output work/datasets/demo
+uv run python -m simulator.ingest work/datasets/demo --limit 50
+```
+
+Start the API before ingestion. Repeat ingestion to check idempotency. Export paths must be
+new. Open `work/datasets/demo/reports/incidents.png` to inspect injected degradation.
+Read [the Phase 2 guide](docs/phase-2.md) and [dataset card](docs/dataset_card.md) for assumptions,
+operational/truth boundaries, reproducibility, and limitations. Generated files are not committed.
+
 ## Next phases
 
 1. Domain model, ownership, ingestion, audit, outbox: implemented; see Phase 1 verification.
-2. Reproducible synthetic ecosystem and incident truth isolated from operational features.
+2. Synthetic ecosystem, separate incident truth, reports and replayable ingestion: see Phase 2.
 3. Rule-based decisions, independent eligibility, scheduling, reconciliation.
 4. Degradation detection, diagnosis, temporal ML evaluation, SHAP.
 5. Comparable monetary experiments with seeds, controls, and uncertainty intervals.
