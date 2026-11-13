@@ -5,6 +5,7 @@ x-app: &app
     target: runtime
   environment: &environment
     PAYREVIVE_EXECUTION_MODE: ${PAYREVIVE_EXECUTION_MODE:-simulation}
+    PAYREVIVE_RECOVERY_RULES: '${PAYREVIVE_RECOVERY_RULES:-{}}'
     PAYREVIVE_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-payrevive}:${POSTGRES_PASSWORD:-payrevive_local}@postgres:5432/${POSTGRES_DB:-payrevive}
     PAYREVIVE_REDIS_URL: redis://redis:6379/0
     PAYREVIVE_RESULT_BACKEND_URL: redis://redis:6379/1

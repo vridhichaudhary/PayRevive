@@ -47,7 +47,9 @@ estimate does not prove that an actual intervention will be profitable.
 
 The eligibility algorithm has an explicit `sim-v2` version prefix as well as a configuration
 hash, so logic changes can invalidate old approvals. Rules load through the existing typed settings (`PAYREVIVE_RECOVERY_RULES` accepts a JSON
-object) and have a content-derived version. Configuration changes require restarting the app,
+object) and have a content-derived version. Compose forwards this value to API, worker,
+and scheduler. Add an override such as `PAYREVIVE_RECOVERY_RULES={"cooldown_hours":12}`
+to `.env` if desired; `{}` uses the tested defaults. Configuration changes require restarting the app,
 worker, and scheduler with the same configuration. Every decision stores its exact rule
 snapshot/version. There is no policy-editing UI or per-tenant policy registry yet.
 
