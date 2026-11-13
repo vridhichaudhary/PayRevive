@@ -21,10 +21,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["backend/app"]
+packages = ["backend/app", "simulator"]
 
 [tool.pytest.ini_options]
-testpaths = ["backend/tests"]
+testpaths = ["backend/tests", "simulator/tests"]
 addopts = "-m 'not postgres'"
 markers = ["postgres: real isolated PostgreSQL integration tests"]
 

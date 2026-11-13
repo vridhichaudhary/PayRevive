@@ -6,6 +6,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY backend ./backend
 COPY scripts ./scripts
+COPY simulator ./simulator
 RUN uv sync --frozen --no-dev && useradd --uid 10001 --create-home appuser
 USER appuser
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
