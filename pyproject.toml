@@ -39,8 +39,9 @@ packages = ["backend/app", "simulator", "ml"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests", "simulator/tests", "ml/tests"]
-addopts = "-m 'not postgres'"
-markers = ["postgres: real isolated PostgreSQL integration tests"]
+addopts = "-m 'not postgres and not analysis'"
+markers = ["postgres: real isolated PostgreSQL integration tests",
+    "analysis: optional analysis environment and clean-kernel notebook execution"]
 
 [tool.ruff]
 target-version = "py313"

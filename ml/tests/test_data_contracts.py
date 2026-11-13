@@ -38,6 +38,9 @@ def rewrite(directory, name, rows):
 
 
 def test_simulator_and_analysis_share_one_feature_implementation():
+    from app.features.contracts import FeatureValues
+
+    assert set(FeatureValues.model_fields) == set(MODEL_INPUT_FIELDS)
     assert Features is ObservationFeatures
     row = generate(GeneratorConfig(customers=30)).features[0]
     assert tuple(row.model_inputs()) == MODEL_INPUT_FIELDS

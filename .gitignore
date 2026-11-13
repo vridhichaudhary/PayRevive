@@ -8,3 +8,5 @@ __pycache__/
 
 work/
 datasets/
+
+.ipynb_checkpoints/

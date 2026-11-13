@@ -124,3 +124,13 @@ schedules, operation identity, outcomes, and processing acknowledgements; one Ce
 process dispatches short-lived work. Redis loss cannot erase pending database work. Global
 simulation policy settings are not per-tenant policy administration or verified legal rules.
 The engine never reads hidden evaluation truth, and ML/SHAP remain the next core milestone.
+
+
+## Phase 4A implementation
+
+The [shared feature contract and provenance](phase-4a.md) precede model training. Operational
+loading is separate from evaluation truth, immutable snapshots bind to actual scoped events,
+and notebooks are explanatory clients of tested analysis modules. A dedicated optional
+analysis environment and CI job execute the first data-audit notebook; the serving image
+contains no notebook dependencies. Phase 4 remains incomplete until detection, diagnosis,
+temporal evaluation/model comparison, and SHAP are implemented and evaluated.

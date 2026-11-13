@@ -87,6 +87,19 @@ reconciliation. Existing unlinked payments are not automatically granted retry p
 See [Phase 3](docs/phase-3.md) for the state machine, assumptions, examples, and safety tests.
 Compose now also runs one Celery Beat scheduler; PostgreSQL owns all due times and state.
 
+## Data science and notebooks
+
+```sh
+uv sync --frozen --group analysis
+uv run --group analysis python -m ml.notebooks.run --dataset work/datasets/demo --output work/analysis/data-audit
+```
+
+Generate the dataset first using the command above. Open `work/analysis/data-audit/report.html`
+without Jupyter, or use [the notebook instructions](notebooks/README.md) for interactive work.
+The notebook imports tested modules; there is no duplicate ML implementation. Read
+[Phase 4A](docs/phase-4a.md) and [actual audit findings](docs/experiment_reports/data-audit-v1.md).
+Snapshots can be imported with `simulator.ingest ... --with-features`. No model is trained yet.
+
 ## Next phases
 
 1. Domain model, ownership, ingestion, audit, outbox: implemented; see Phase 1 verification.
