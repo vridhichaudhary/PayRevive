@@ -7,9 +7,10 @@ celery_app = Celery(
     "payrevive",
     broker=settings.redis_url.get_secret_value(),
     backend=settings.result_backend_url.get_secret_value(),
-    include=["app.tasks"],
+    include=["app.tasks", "app.recovery.tasks"],
 )
 celery_app.conf.update(
+    beat_schedule={"recovery-sweep": {"task": "payrevive.recovery_sweep", "schedule": 5.0}},
     task_serializer="json",
     result_serializer="json",
     accept_content=["json"],

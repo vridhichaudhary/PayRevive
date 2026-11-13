@@ -15,6 +15,7 @@ class EligibilityContext:
     attempt_number: int
     last_attempt_at: datetime
     first_attempt_at: datetime
+    failure_reason: str | None = None
     terminal_evidence: bool = False
     other_active_action: bool = False
 
@@ -51,15 +52,34 @@ def assess(
         return Eligibility(False, "attempt_limit")
     if now - context.first_attempt_at > timedelta(hours=rules.max_age_hours):
         return Eligibility(False, "recovery_window_expired")
+    # The proposer cannot supply its own authority, probability estimate, cost, or reason.
+    if (
+        context.failure_reason not in {"insufficient_funds", "issuer_unavailable", "gateway_error"}
+        or proposal.reason != context.failure_reason
+    ):
+        return Eligibility(False, "unverified_reason")
+    funds = context.failure_reason == "insufficient_funds"
+    success_bps = rules.funds_success_bps if funds else rules.transient_success_bps
+    if proposal.cost_minor != rules.action_cost_minor or proposal.success_bps != success_bps:
+        return Eligibility(False, "untrusted_economics")
     # Basis-point arithmetic keeps currency comparisons exact; no float money.
-    if context.amount_minor * proposal.success_bps <= proposal.cost_minor * 10000:
+    if context.amount_minor * success_bps <= rules.action_cost_minor * 10000:
         return Eligibility(False, "uneconomic")
     approval_required = context.amount_minor >= rules.approval_amount_minor
     if executing:
         if (
             proposal.due_at is None
             or now < proposal.due_at
-            or (now < context.last_attempt_at + timedelta(hours=rules.cooldown_hours))
+            or (
+                now
+                < context.last_attempt_at
+                + timedelta(
+                    hours=max(
+                        rules.cooldown_hours,
+                        rules.funds_delay_hours if funds else rules.transient_delay_hours,
+                    )
+                )
+            )
         ):
             return Eligibility(False, "not_due", approval_required)
         if approval_required and not approved:

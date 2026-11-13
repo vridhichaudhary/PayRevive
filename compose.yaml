@@ -66,6 +66,19 @@ services:
       interval: 10s
       timeout: 8s
       retries: 12
+  scheduler:
+    <<: *app
+    command: [celery, -A, app.worker:celery_app, beat, --loglevel=INFO, --schedule=/tmp/payrevive-beat]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'kill -0 1']
+      interval: 10s
+      timeout: 3s
+      retries: 10
   test-postgres:
     profiles: [test]
     image: postgres:17.7-bookworm

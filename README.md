@@ -5,8 +5,9 @@ Initial demonstration: one organization, INR, local execution, no real money.
 
 The intended MVP combines degradation detection, failure diagnosis, SHAP, deterministic
 recovery/eligibility, safe execution, auditability, and reproducible monetary experiments.
-**Current implementation: foundations, transactional ingestion, and a reproducible synthetic
-payment ecosystem with injected incidents.** No recovery execution or trained models exist yet. See [Phase 1](docs/phase-1.md) for the domain and API contract.
+**Current implementation: foundations, transactional ingestion, a reproducible synthetic
+ecosystem, and consent-gated rule-based recovery through a persistent execution simulator.**
+No trained models or incremental-revenue evaluation exist yet. See [Phase 1](docs/phase-1.md) for the domain and API contract.
 See [Phase 0 verification](docs/phase-0.md) and [architecture](docs/architecture.md).
 
 ## Run locally
@@ -75,11 +76,22 @@ new. Open `work/datasets/demo/reports/incidents.png` to inspect injected degrada
 Read [the Phase 2 guide](docs/phase-2.md) and [dataset card](docs/dataset_card.md) for assumptions,
 operational/truth boundaries, reproducibility, and limitations. Generated files are not committed.
 
+## Try safe recovery
+
+```sh
+docker compose exec -T api python scripts/recovery_smoke.py
+```
+
+The API exposes online customer consent, recommendations, approvals, action state, and
+reconciliation. Existing unlinked payments are not automatically granted retry permission.
+See [Phase 3](docs/phase-3.md) for the state machine, assumptions, examples, and safety tests.
+Compose now also runs one Celery Beat scheduler; PostgreSQL owns all due times and state.
+
 ## Next phases
 
 1. Domain model, ownership, ingestion, audit, outbox: implemented; see Phase 1 verification.
 2. Synthetic ecosystem, separate incident truth, reports and replayable ingestion: see Phase 2.
-3. Rule-based decisions, independent eligibility, scheduling, reconciliation.
+3. Consent-gated rule decisions, eligibility, scheduling and reconciliation: see Phase 3.
 4. Degradation detection, diagnosis, temporal ML evaluation, SHAP.
 5. Comparable monetary experiments with seeds, controls, and uncertainty intervals.
 6. Dashboard and a documented cold-start demonstration.

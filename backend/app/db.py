@@ -3,7 +3,7 @@ from sqlalchemy.engine import Engine
 
 from app.config import Settings
 
-SCHEMA_REVISION = "0002_domain"
+SCHEMA_REVISION = "0003_recovery"
 
 
 def build_engine(settings: Settings) -> Engine:

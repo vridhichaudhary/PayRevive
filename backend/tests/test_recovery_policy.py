@@ -16,6 +16,7 @@ CONTEXT = EligibilityContext(
     attempt_number=1,
     last_attempt_at=NOW - timedelta(hours=30),
     first_attempt_at=NOW - timedelta(hours=30),
+    failure_reason="issuer_unavailable",
 )
 
 
@@ -61,7 +62,12 @@ def test_missing_eligibility_rules_fails_closed():
 
 
 def test_scheduling_does_not_bypass_execution_time_cooldown_or_approval():
-    recent = replace(CONTEXT, amount_minor=149900, last_attempt_at=NOW - timedelta(hours=1))
+    recent = replace(
+        CONTEXT,
+        amount_minor=149900,
+        last_attempt_at=NOW - timedelta(hours=1),
+        failure_reason="insufficient_funds",
+    )
     proposal = propose("insufficient_funds", recent.last_attempt_at, NOW, RULES)
     assert assess(recent, proposal, RULES, NOW).allowed
     assert assess(recent, proposal, RULES, NOW, executing=True, approved=True).reason == "not_due"
@@ -75,3 +81,44 @@ def test_rule_version_changes_and_invalid_config_cannot_be_loaded():
     assert RecoveryRules(cooldown_hours=12).version != RULES.version
     with pytest.raises(ValidationError):
         RecoveryRules(max_total_attempts=0)
+
+
+@pytest.mark.parametrize(
+    "changes", [{"account": "payrevive_recovery"}, {"source_event_id": "rcv_forged"}]
+)
+def test_public_ingestion_cannot_spoof_internal_receipt_identity(changes):
+    from app.ingestion.schemas import EventInput
+
+    with pytest.raises(ValidationError):
+        EventInput(
+            **{
+                "source_event_id": "ordinary",
+                "attempt_number": 1,
+                "status": "failed",
+                "occurred_at": NOW,
+                **changes,
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "changes,reason",
+    [
+        ({"cost_minor": 0}, "untrusted_economics"),
+        ({"success_bps": 10000}, "untrusted_economics"),
+        ({"reason": "insufficient_funds"}, "unverified_reason"),
+    ],
+)
+def test_proposal_cannot_authorize_its_own_economics_or_reason(changes, reason):
+    proposal = propose("issuer_unavailable", CONTEXT.last_attempt_at, NOW, RULES)
+    result = assess(CONTEXT, proposal.model_copy(update=changes), RULES, NOW)
+    assert not result.allowed and result.reason == reason
+
+
+def test_claimed_due_time_cannot_bypass_reason_specific_minimum_delay():
+    context = replace(
+        CONTEXT, failure_reason="insufficient_funds", last_attempt_at=NOW - timedelta(hours=8)
+    )
+    proposal = propose("insufficient_funds", context.last_attempt_at, NOW, RULES)
+    forged = proposal.model_copy(update={"due_at": NOW - timedelta(hours=1)})
+    assert assess(context, forged, RULES, NOW, executing=True).reason == "not_due"

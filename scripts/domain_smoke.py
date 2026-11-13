@@ -72,7 +72,6 @@ def verify_ingestion() -> None:
                 .where(
                     events.c.org_id == DEMO_ORG_ID,
                     events.c.payment_id == payment_id,
-                    outbox.c.published_at.is_(None),
                 )
             )
             assert count == 3

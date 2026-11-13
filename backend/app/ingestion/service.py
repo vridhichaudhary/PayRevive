@@ -8,7 +8,18 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Connection, Engine
 
 from app.domain.state import next_attempt_state
-from app.domain.tables import attempts, audit, events, organizations, outbox, payments
+from app.domain.tables import (
+    actions,
+    attempts,
+    audit,
+    customers,
+    decisions,
+    events,
+    organizations,
+    outbox,
+    outcomes,
+    payments,
+)
 from app.ingestion.schemas import EventInput, PaymentInput
 
 
@@ -29,7 +40,12 @@ def require_org(connection: Connection, org_id: UUID) -> None:
 
 
 def append_audit(
-    connection: Connection, org_id: UUID, payment_id: UUID, kind: str, payload: dict[str, Any]
+    connection: Connection,
+    org_id: UUID,
+    payment_id: UUID,
+    kind: str,
+    payload: dict[str, Any],
+    actor: str = "local_simulator",
 ) -> None:
     connection.execute(
         audit.insert().values(
@@ -37,7 +53,7 @@ def append_audit(
             org_id=org_id,
             payment_id=payment_id,
             kind=kind,
-            actor="local_simulator",
+            actor=actor,
             payload=payload,
         )
     )
@@ -46,6 +62,12 @@ def append_audit(
 def create_payment(engine: Engine, org_id: UUID, data: PaymentInput) -> tuple[dict[str, Any], bool]:
     with engine.begin() as connection:
         require_org(connection, org_id)
+        if data.customer_id is not None and not connection.scalar(
+            sa.select(customers.c.id).where(
+                scope(customers, org_id), customers.c.id == data.customer_id
+            )
+        ):
+            raise DomainError(404, "Customer not found in organization")
         payment_id = connection.execute(
             insert(payments)
             .values(id=uuid4(), org_id=org_id, **data.model_dump())
@@ -61,7 +83,11 @@ def create_payment(engine: Engine, org_id: UUID, data: PaymentInput) -> tuple[di
             .mappings()
             .one()
         )
-        if row["amount_minor"] != data.amount_minor or row["currency"] != data.currency:
+        if (
+            row["amount_minor"] != data.amount_minor
+            or row["currency"] != data.currency
+            or row["customer_id"] != data.customer_id
+        ):
             raise DomainError(409, "Payment reference already has different immutable details")
         if payment_id:
             append_audit(connection, org_id, payment_id, "payment.created", {})
@@ -110,6 +136,15 @@ def ingest_event(
             if existing["fingerprint"] != fingerprint:
                 raise DomainError(409, "Event identity reused with different content")
             return {"event_id": existing["id"], "duplicate": True}
+        reserved = connection.scalar(
+            sa.select(actions.c.attempt_number).where(
+                scope(actions, org_id),
+                actions.c.payment_id == payment_id,
+                actions.c.status.in_(("executing", "unknown")),
+            )
+        )
+        if reserved is not None and data.attempt_number >= reserved:
+            raise DomainError(409, "Attempt number reserved by an unresolved recovery operation")
         attempt = (
             connection.execute(
                 sa.select(attempts).where(
@@ -208,6 +243,9 @@ def get_payment(engine: Engine, org_id: UUID, payment_id: UUID) -> dict[str, Any
                 ("attempts", attempts, attempts.c.number),
                 ("events", events, events.c.occurred_at),
                 ("audit", audit, audit.c.created_at),
+                ("recovery_decisions", decisions, decisions.c.created_at),
+                ("recovery_actions", actions, actions.c.created_at),
+                ("recovery_outcomes", outcomes, outcomes.c.created_at),
             ]:
                 result[name] = [
                     dict(item)

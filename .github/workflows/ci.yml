@@ -20,10 +20,12 @@ jobs:
       - run: docker compose --profile test run --build --rm test-runner
       - run: docker compose exec -T api python scripts/smoke.py
       - run: docker compose exec -T api python scripts/simulator_smoke.py
+      - run: docker compose exec -T api python scripts/recovery_smoke.py
       - run: docker compose run --rm migrate
       - run: docker compose --profile test down && docker compose up --wait --wait-timeout 180
       - run: docker compose exec -T api python scripts/smoke.py
       - run: docker compose exec -T api python scripts/simulator_smoke.py
+      - run: docker compose exec -T api python scripts/recovery_smoke.py
       - if: failure()
         run: docker compose logs --no-color
       - if: always()

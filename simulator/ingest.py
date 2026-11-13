@@ -50,7 +50,7 @@ def load_operational(directory: Path) -> tuple[list[Payment], list[Attempt]]:
 def payment_payload(payment: Payment) -> dict:
     return PaymentInput(
         reference=payment.payment_ref, amount_minor=payment.amount_minor, currency=payment.currency
-    ).model_dump(mode="json")
+    ).model_dump(mode="json", exclude_none=True)
 
 
 def event_payload(attempt: Attempt) -> dict:

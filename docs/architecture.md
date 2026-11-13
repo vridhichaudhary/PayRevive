@@ -113,3 +113,14 @@ payment/event inputs; customer/card profiles and feature snapshots remain offlin
 reviewed ingestion contract is added. No queue consumer reads evaluation truth. PostgreSQL
 remains the operational business source of truth. Policies, financial experiments, detector,
 diagnosis, and SHAP have not been implemented by this generator milestone.
+
+
+## Phase 3 implementation
+
+See [safe recovery](phase-3.md) for explicit online consent, immutable decision snapshots,
+version-bound approval, a durable action state machine, and receipt reconciliation. A separate
+simulator-ledger transaction models the processor/application commit boundary. PostgreSQL owns
+schedules, operation identity, outcomes, and processing acknowledgements; one Celery Beat
+process dispatches short-lived work. Redis loss cannot erase pending database work. Global
+simulation policy settings are not per-tenant policy administration or verified legal rules.
+The engine never reads hidden evaluation truth, and ML/SHAP remain the next core milestone.

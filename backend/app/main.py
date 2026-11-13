@@ -11,6 +11,7 @@ from app.db import build_engine
 from app.health import DependencyProbe, ReadinessProbe
 from app.ingestion.routes import router
 from app.ingestion.service import DomainError
+from app.recovery.routes import router as recovery_router
 
 
 def create_app(settings: Settings | None = None, probe: ReadinessProbe | None = None) -> FastAPI:
@@ -40,6 +41,7 @@ def create_app(settings: Settings | None = None, probe: ReadinessProbe | None = 
     application = FastAPI(title="PayRevive", version="0.1.0", lifespan=lifespan)
 
     application.include_router(router)
+    application.include_router(recovery_router)
 
     @application.exception_handler(DomainError)
     async def domain_error(request: Request, error: DomainError):

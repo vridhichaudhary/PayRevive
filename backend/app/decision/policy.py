@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictInt
 
 Positive = Annotated[StrictInt, Field(gt=0)]
 
@@ -23,16 +23,16 @@ class RecoveryRules(BaseModel):
 
     @property
     def version(self) -> str:
-        return "sim-v1-" + hashlib.sha256(self.model_dump_json().encode()).hexdigest()[:16]
+        return "sim-v2-" + hashlib.sha256(self.model_dump_json().encode()).hexdigest()[:16]
 
 
 class Proposal(BaseModel):
     model_config = ConfigDict(frozen=True)
     kind: Literal["retry", "request_update", "review", "no_action"]
     reason: str
-    due_at: datetime | None = None
-    success_bps: int = 0
-    cost_minor: int = 0
+    due_at: AwareDatetime | None = None
+    success_bps: Annotated[StrictInt, Field(ge=0, le=10000)] = 0
+    cost_minor: Annotated[StrictInt, Field(ge=0)] = 0
 
 
 def propose(

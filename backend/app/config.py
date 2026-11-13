@@ -5,11 +5,14 @@ from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
+from app.decision.policy import RecoveryRules
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="PAYREVIVE_", extra="ignore")
 
     execution_mode: Literal["simulation"] = "simulation"
+    recovery_rules: RecoveryRules = Field(default_factory=RecoveryRules)
     database_url: SecretStr = SecretStr(
         "postgresql+psycopg://payrevive:payrevive_local@localhost:5432/payrevive"
     )

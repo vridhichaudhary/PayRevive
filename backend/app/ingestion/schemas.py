@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictInt, model_validator
 
@@ -14,6 +15,7 @@ class PaymentInput(InputModel):
     reference: Identifier
     amount_minor: Annotated[StrictInt, Field(gt=0, le=9223372036854775807)]
     currency: Literal["INR"] = "INR"
+    customer_id: UUID | None = None
 
 
 class EventInput(InputModel):
@@ -37,6 +39,8 @@ class EventInput(InputModel):
 
     @model_validator(mode="after")
     def validate_observation(self):
+        if self.account == "payrevive_recovery" or self.source_event_id.startswith("rcv_"):
+            raise ValueError("Recovery observation identities are reserved")
         self.occurred_at = self.occurred_at.astimezone(UTC)
         if self.status != "failed" and self.reason is not None:
             raise ValueError("Only failed events can include a failure reason")
