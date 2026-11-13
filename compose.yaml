@@ -1,0 +1,98 @@
+name: payrevive
+x-app: &app
+  build:
+    context: .
+    target: runtime
+  environment: &environment
+    PAYREVIVE_EXECUTION_MODE: ${PAYREVIVE_EXECUTION_MODE:-simulation}
+    PAYREVIVE_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-payrevive}:${POSTGRES_PASSWORD:-payrevive_local}@postgres:5432/${POSTGRES_DB:-payrevive}
+    PAYREVIVE_REDIS_URL: redis://redis:6379/0
+    PAYREVIVE_RESULT_BACKEND_URL: redis://redis:6379/1
+
+services:
+  postgres:
+    image: postgres:17.7-bookworm
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-payrevive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-payrevive_local}
+      POSTGRES_DB: ${POSTGRES_DB:-payrevive}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4.7-bookworm
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    <<: *app
+    command: [alembic, -c, backend/alembic.ini, upgrade, head]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    <<: *app
+    ports:
+      - '127.0.0.1:${API_PORT:-8000}:8000'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, python, -c, 'import urllib.request; urllib.request.urlopen("http://localhost:8000/health/ready", timeout=8)']
+      interval: 5s
+      timeout: 10s
+      retries: 12
+  worker:
+    <<: *app
+    command: [celery, -A, app.worker:celery_app, worker, --loglevel=INFO, --concurrency=2]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD-SHELL, 'celery -A app.worker:celery_app inspect ping --destination "celery@$$HOSTNAME" --timeout 3']
+      interval: 10s
+      timeout: 8s
+      retries: 12
+  test-postgres:
+    profiles: [test]
+    image: postgres:17.7-bookworm
+    environment:
+      POSTGRES_USER: payrevive
+      POSTGRES_PASSWORD: payrevive_test
+      POSTGRES_DB: payrevive_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: [CMD, pg_isready, -U, payrevive, -d, payrevive_test]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  test-runner:
+    profiles: [test]
+    build:
+      context: .
+      target: test
+    environment:
+      PAYREVIVE_DATABASE_URL: postgresql+psycopg://payrevive:payrevive_test@test-postgres:5432/payrevive_test
+      PAYREVIVE_INTEGRATION_TESTS: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+    command: [sh, -c, 'alembic -c backend/alembic.ini upgrade head && pytest -q -W error -m postgres -p no:cacheprovider']
+volumes:
+  postgres_data:
+  redis_data:
