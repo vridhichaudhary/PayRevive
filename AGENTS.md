@@ -22,3 +22,13 @@ The user requests regular commits and pushes. After each tested, meaningful mile
 an accurately scoped commit and push it to the configured GitHub remote. Do not wait for an
 entire phase if a smaller coherent component is complete. Never commit secrets, environments,
 cache directories, or generated local data. Report commit IDs and any push/CI failures.
+
+## Approved ML/notebook workflow
+
+Reusable data, features, detection, training, evaluation and SHAP logic belongs in tested Python
+modules. Focused notebooks import those modules to explain real generated-data experiments.
+No duplicated business/ML implementation, hidden cell state, hand-edited metrics, or runtime
+Jupyter dependency. Run notebooks from a fresh kernel with manifests and pinned dependencies;
+publish executed reports as artifacts. The serving image must not install notebook tooling.
+The first milestone is Phase 4A: shared feature provenance and the data/feature audit notebook.
+Do not mark the whole Phase 4 complete before detection, diagnosis, temporal evaluation and SHAP.

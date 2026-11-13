@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import Settings, get_settings
 from app.db import build_engine
+from app.features.routes import router as features_router
 from app.health import DependencyProbe, ReadinessProbe
 from app.ingestion.routes import router
 from app.ingestion.service import DomainError
@@ -42,6 +43,7 @@ def create_app(settings: Settings | None = None, probe: ReadinessProbe | None = 
 
     application.include_router(router)
     application.include_router(recovery_router)
+    application.include_router(features_router)
 
     @application.exception_handler(DomainError)
     async def domain_error(request: Request, error: DomainError):

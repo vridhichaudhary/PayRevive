@@ -59,12 +59,25 @@ def event_payload(attempt: Attempt) -> dict:
     )
 
 
-def ingest(directory: Path, client: httpx.Client, limit: int = 100) -> dict[str, int]:
+def ingest(
+    directory: Path, client: httpx.Client, limit: int = 100, include_features: bool = False
+) -> dict[str, int]:
     if urlparse(str(client.base_url)).hostname not in {"localhost", "127.0.0.1", "::1"}:
         raise ValueError("This adapter is restricted to a local simulator API")
     if limit <= 0:
         raise ValueError("Limit must be positive")
-    payments, attempts = load_operational(directory)
+    bundle = None
+    if include_features:
+        from ml.data.loading import load_operational as load_verified
+
+        bundle = load_verified(directory)
+        payments, attempts = list(bundle.payments), list(bundle.attempts)
+        for payment in payments:
+            payment_payload(payment)
+        for attempt in attempts:
+            event_payload(attempt)
+    else:
+        payments, attempts = load_operational(directory)
     by_ref = {a.payment_ref: a for a in attempts}
     counts = {
         "payments_created": 0,
@@ -72,6 +85,8 @@ def ingest(directory: Path, client: httpx.Client, limit: int = 100) -> dict[str,
         "events_created": 0,
         "events_replayed": 0,
     }
+    if include_features:
+        counts.update(features_created=0, features_replayed=0)
     for payment in payments[:limit]:
         path = f"/v1/organizations/{payment.org_id}/payments"
         response = client.post(path, json=payment_payload(payment))
@@ -83,6 +98,12 @@ def ingest(directory: Path, client: httpx.Client, limit: int = 100) -> dict[str,
         )
         response.raise_for_status()
         counts["events_created" if response.status_code == 201 else "events_replayed"] += 1
+        if bundle is not None:
+            event_id = response.json()["event_id"]
+            payload = bundle.snapshot_input(payment.payment_ref).model_dump(mode="json")
+            response = client.post(f"{path}/{payment_id}/events/{event_id}/features", json=payload)
+            response.raise_for_status()
+            counts["features_created" if response.status_code == 201 else "features_replayed"] += 1
     return counts
 
 
@@ -93,9 +114,17 @@ def main() -> None:
     parser.add_argument("dataset", type=Path)
     parser.add_argument("--api", default="http://127.0.0.1:8000")
     parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument(
+        "--with-features", action="store_true", help="Verify and attach feature provenance"
+    )
     args = parser.parse_args()
     with httpx.Client(base_url=args.api, timeout=15, follow_redirects=False) as client:
-        print(json.dumps(ingest(args.dataset, client, args.limit), sort_keys=True))
+        print(
+            json.dumps(
+                ingest(args.dataset, client, args.limit, include_features=args.with_features),
+                sort_keys=True,
+            )
+        )
 
 
 if __name__ == "__main__":

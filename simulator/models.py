@@ -2,6 +2,8 @@ from datetime import date, datetime
 from typing import Literal
 from uuid import UUID
 
+from app.features.contracts import MODEL_INPUT_FIELDS as MODEL_INPUT_FIELDS
+from app.features.contracts import ObservationFeatures as Features
 from pydantic import BaseModel, ConfigDict
 
 Reason = Literal[
@@ -58,47 +60,6 @@ class Attempt(Record):
     status: Literal["failed", "succeeded"]
     reason: Reason | None
     occurred_at: datetime
-
-
-MODEL_INPUT_FIELDS = (
-    "amount_minor",
-    "segment",
-    "tenure_months",
-    "issuer",
-    "network",
-    "gateway",
-    "days_to_expiry",
-    "day_of_month",
-    "hour_utc",
-    "gateway_latency_ms",
-    "prior_payment_count",
-    "prior_success_rate",
-)
-
-
-class Features(Record):
-    """Allowlisted inference inputs available at the initial outcome observation."""
-
-    payment_ref: str
-    source_event_id: str
-    org_id: UUID
-    observed_at: datetime
-    amount_minor: int
-    segment: str
-    tenure_months: int
-    issuer: str
-    network: str
-    gateway: str
-    days_to_expiry: int
-    day_of_month: int
-    hour_utc: int
-    gateway_latency_ms: int
-    prior_payment_count: int
-    prior_success_rate: float | None
-
-    def model_inputs(self) -> dict[str, object]:
-        """IDs and timestamps remain join metadata, never automatically become model inputs."""
-        return {name: getattr(self, name) for name in MODEL_INPUT_FIELDS}
 
 
 class Incident(Record):

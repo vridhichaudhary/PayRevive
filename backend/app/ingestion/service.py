@@ -15,6 +15,7 @@ from app.domain.tables import (
     customers,
     decisions,
     events,
+    feature_snapshots,
     organizations,
     outbox,
     outcomes,
@@ -246,6 +247,7 @@ def get_payment(engine: Engine, org_id: UUID, payment_id: UUID) -> dict[str, Any
                 ("recovery_decisions", decisions, decisions.c.created_at),
                 ("recovery_actions", actions, actions.c.created_at),
                 ("recovery_outcomes", outcomes, outcomes.c.created_at),
+                ("feature_snapshots", feature_snapshots, feature_snapshots.c.created_at),
             ]:
                 result[name] = [
                     dict(item)

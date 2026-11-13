@@ -263,3 +263,32 @@ outbox.append_column(sa.Column("processed_at", sa.DateTime(timezone=True)))
 sa.Index(
     "ix_outbox_unprocessed", outbox.c.created_at, postgresql_where=outbox.c.processed_at.is_(None)
 )
+
+
+feature_snapshots = sa.Table(
+    "observation_features",
+    metadata,
+    identity(),
+    organization(),
+    sa.Column("payment_id", sa.Uuid, nullable=False),
+    sa.Column("event_id", sa.Uuid, nullable=False),
+    sa.Column("observed_at", sa.DateTime(timezone=True), nullable=False),
+    sa.Column("schema_version", sa.String(40), nullable=False),
+    sa.Column("dataset_id", sa.String(16), nullable=False),
+    sa.Column("source_manifest_sha256", sa.String(64), nullable=False),
+    sa.Column("generator_version", sa.String(20), nullable=False),
+    sa.Column("fingerprint", sa.String(64), nullable=False),
+    sa.Column("values", JSONB, nullable=False),
+    timestamp(),
+    sa.ForeignKeyConstraint(
+        ["org_id", "payment_id", "event_id"],
+        ["payment_events.org_id", "payment_events.payment_id", "payment_events.id"],
+    ),
+    sa.UniqueConstraint("org_id", "event_id"),
+)
+sa.Index(
+    "ix_features_dataset_time",
+    feature_snapshots.c.org_id,
+    feature_snapshots.c.dataset_id,
+    feature_snapshots.c.observed_at,
+)

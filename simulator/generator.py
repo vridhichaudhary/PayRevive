@@ -31,10 +31,14 @@ def random_stream(seed: int, key: str) -> random.Random:
     return random.Random(int.from_bytes(digest, "big"))
 
 
-def generate(config: GeneratorConfig) -> Dataset:
-    dataset_id = hashlib.sha256(
-        canonical({"version": GENERATOR_VERSION, **config.model_dump(mode="json")})
+def dataset_identity(config: GeneratorConfig, version: str = GENERATOR_VERSION) -> str:
+    return hashlib.sha256(
+        canonical({"version": version, **config.model_dump(mode="json")})
     ).hexdigest()[:16]
+
+
+def generate(config: GeneratorConfig) -> Dataset:
+    dataset_id = dataset_identity(config)
     start = datetime.combine(config.start, datetime.min.time(), UTC)
     incident_specs = [
         (10, 3, "issuer", "issuer_a"),

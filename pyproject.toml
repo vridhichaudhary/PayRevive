@@ -21,6 +21,13 @@ dependencies = [
 ]
 
 [dependency-groups]
+analysis = [
+    "ipykernel>=6,<8",
+    "jupyterlab>=4,<5",
+    "nbclient>=0.10,<1",
+    "nbconvert>=7,<8",
+    "pandas>=2.2,<4",
+]
 dev = [
     "httpx2>=2,<3",
     "pytest>=8,<10",
@@ -28,10 +35,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["backend/app", "simulator"]
+packages = ["backend/app", "simulator", "ml"]
 
 [tool.pytest.ini_options]
-testpaths = ["backend/tests", "simulator/tests"]
+testpaths = ["backend/tests", "simulator/tests", "ml/tests"]
 addopts = "-m 'not postgres'"
 markers = ["postgres: real isolated PostgreSQL integration tests"]
 
