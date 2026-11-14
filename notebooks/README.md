@@ -77,3 +77,10 @@ an export other than the default `work/datasets/demo`. Follow the
 [degradation guide](../docs/phase-4b.md) for the fresh-kernel command, comparison
 scenarios, and actual results. CI publishes the executed smoke artifact as
 `degradation-detection-notebook`.
+
+## Failure diagnosis
+
+Open `03_failure_diagnosis.ipynb` in the locked analysis environment. The
+[diagnosis guide](../docs/phase-4c.md) gives the fresh-kernel command and
+explains the temporal comparison, abstention, and SHAP results. CI publishes
+an executed smoke report as `failure-diagnosis-notebook`.

@@ -16,9 +16,18 @@ MODULES = (
 )
 
 
-def environment_record() -> dict:
+def environment_record(extra_dependencies: tuple[str, ...] = ()) -> dict:
     dependencies = {}
-    for name in ("pydantic", "matplotlib", "numpy", "pandas", "nbclient", "nbconvert", "ipykernel"):
+    for name in (
+        "pydantic",
+        "matplotlib",
+        "numpy",
+        "pandas",
+        "nbclient",
+        "nbconvert",
+        "ipykernel",
+        *extra_dependencies,
+    ):
         try:
             dependencies[name] = version(name)
         except PackageNotFoundError:

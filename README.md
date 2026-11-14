@@ -102,13 +102,15 @@ Snapshots can be imported with `simulator.ingest ... --with-features`.
 
 [Phase 4B](docs/phase-4b.md) adds daily issuer and gateway degradation detection,
 a fixed-threshold comparison, and an executable notebook with synthetic incident metrics.
+[Phase 4C](docs/phase-4c.md) adds offline per-payment diagnosis, temporal
+model comparison, abstention, and a SHAP notebook.
 
 ## Next phases
 
 1. Domain model, ownership, ingestion, audit, outbox: implemented; see Phase 1 verification.
 2. Synthetic ecosystem, separate incident truth, reports and replayable ingestion: see Phase 2.
 3. Consent-gated rule decisions, eligibility, scheduling and reconciliation: see Phase 3.
-4. Degradation detection, diagnosis, temporal ML evaluation, SHAP.
+4. Degradation detection, diagnosis, temporal ML evaluation, SHAP: implemented as offline replays.
 5. Comparable monetary experiments with seeds, controls, and uncertainty intervals.
 6. Dashboard and a documented cold-start demonstration.
 

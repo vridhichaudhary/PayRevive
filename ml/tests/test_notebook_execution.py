@@ -8,24 +8,26 @@ import pytest
 pytestmark = pytest.mark.analysis
 
 
-@pytest.mark.parametrize("kind", ["audit", "detection"])
+@pytest.mark.parametrize("kind", ["audit", "detection", "diagnosis"])
 def test_clean_kernel_matches_module_results_and_preserves_source(tmp_path, kind):
     from ml.analysis.audit import run_audit
     from ml.analysis.degradation import run_detection
+    from ml.analysis.diagnosis import run_diagnosis
     from ml.notebooks.run import execute_notebook
     from simulator.artifacts import export_dataset
     from simulator.config import GeneratorConfig
 
     dataset, output = tmp_path / "dataset", tmp_path / "notebook"
-    export_dataset(GeneratorConfig(customers=60), dataset)
+    export_dataset(GeneratorConfig(customers=300 if kind == "diagnosis" else 60), dataset)
     name, run = {
         "audit": ("01_data_and_feature_audit.ipynb", run_audit),
         "detection": ("02_degradation_detection.ipynb", run_detection),
+        "diagnosis": ("03_failure_diagnosis.ipynb", run_diagnosis),
     }[kind]
     notebook = Path(__file__).parents[2] / "notebooks" / name
     source = notebook.read_bytes()
     expected = run(dataset, tmp_path / "cli-report")
-    manifest = execute_notebook(dataset, output, notebook if kind == "detection" else None)
+    manifest = execute_notebook(dataset, output, None if kind == "audit" else notebook)
     actual = json.loads((output / kind / f"{kind}.json").read_text())
     assert manifest["report_kind"] == kind
     assert actual == expected

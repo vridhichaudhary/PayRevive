@@ -13,7 +13,12 @@ from simulator.generator import canonical
 
 
 def execute_notebook(
-    dataset: Path, output: Path, notebook: Path | None = None, until: str | None = None
+    dataset: Path,
+    output: Path,
+    notebook: Path | None = None,
+    until: str | None = None,
+    *,
+    challenge: Path | None = None,
 ) -> dict:
     # Optional analysis dependencies are deliberately imported only in this executable path.
     import nbformat
@@ -31,10 +36,12 @@ def execute_notebook(
     source = notebook.read_bytes()
     nb = nbformat.reads(source.decode(), as_version=4)
     report_kind = nb.metadata.get("payrevive_report", "audit")
-    if report_kind not in ("audit", "detection"):
+    if report_kind not in ("audit", "detection", "diagnosis"):
         raise ValueError(f"Unsupported notebook report: {report_kind}")
-    if report_kind == "detection" and until is not None:
+    if report_kind != "audit" and until is not None:
         raise ValueError("--until applies only to the data audit notebook")
+    if challenge is not None and report_kind != "diagnosis":
+        raise ValueError("--challenge applies only to the diagnosis notebook")
     for cell in nb.cells:
         if cell.cell_type == "code":
             cell.outputs = []
@@ -82,6 +89,7 @@ def execute_notebook(
                 "PAYREVIVE_NOTEBOOK_OUTPUT": str(stage / report_kind),
                 "PAYREVIVE_EXPECTED_MANIFEST": verified.manifest_sha256,
                 "PAYREVIVE_NOTEBOOK_UNTIL": until or "",
+                "PAYREVIVE_NOTEBOOK_CHALLENGE": str(challenge.resolve()) if challenge else "",
                 "IPYTHONDIR": str(kernel_root / "ipython"),
                 "JUPYTER_RUNTIME_DIR": str(kernel_root / "runtime"),
                 "JUPYTER_CONFIG_DIR": str(kernel_root / "config"),
@@ -153,8 +161,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--notebook", type=Path)
     parser.add_argument("--until")
+    parser.add_argument("--challenge", type=Path)
     args = parser.parse_args()
-    result = execute_notebook(args.dataset, args.output, args.notebook, args.until)
+    result = execute_notebook(
+        args.dataset, args.output, args.notebook, args.until, challenge=args.challenge
+    )
     print(
         json.dumps(
             {

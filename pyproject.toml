@@ -27,6 +27,8 @@ analysis = [
     "nbclient>=0.10,<1",
     "nbconvert>=7,<8",
     "pandas>=2.2,<4",
+    "scikit-learn>=1.7,<2",
+    "shap>=0.49,<1",
 ]
 dev = [
     "httpx2>=2,<3",

@@ -25,7 +25,7 @@ jobs:
       - name: Ensure serving image excludes notebook tooling
         run: >-
           docker compose exec -T api python -c
-          "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ['nbclient', 'nbconvert', 'ipykernel', 'jupyterlab', 'pandas'])"
+          "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ['nbclient', 'nbconvert', 'ipykernel', 'jupyterlab', 'pandas', 'sklearn', 'shap'])"
       - run: docker compose run --rm migrate
       - run: docker compose --profile test down && docker compose up --wait --wait-timeout 180
       - run: docker compose exec -T api python scripts/smoke.py
@@ -62,4 +62,13 @@ jobs:
         with:
           name: degradation-detection-notebook
           path: work/detection-report/
+          if-no-files-found: error
+      - run: >-
+          uv run --group analysis python -m ml.notebooks.run
+          --notebook notebooks/03_failure_diagnosis.ipynb
+          --dataset work/notebook-input --output work/diagnosis-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: failure-diagnosis-notebook
+          path: work/diagnosis-report/
           if-no-files-found: error

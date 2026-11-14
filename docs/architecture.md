@@ -141,3 +141,11 @@ temporal evaluation/model comparison, and SHAP are implemented and evaluated.
 organization/issuer and organization/gateway windows. Alert scoring uses preceding
 calendar days and stays independent of the evaluation-only incident labels. The
 notebook uses the same report module as the CLI.
+
+## Phase 4C implementation
+
+[Failure diagnosis](phase-4c.md) adds an offline fitted classifier for ambiguous
+failures. Explicit reported reasons and abstention remain distinct outcomes.
+Temporal training and evaluation live in shared analysis modules. SHAP explains
+the selected model's class probabilities. The recovery flow continues to apply
+its deterministic rules and eligibility checks independently.
