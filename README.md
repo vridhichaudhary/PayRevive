@@ -21,7 +21,9 @@ docker compose up --build --wait --wait-timeout 180
 docker compose exec -T api python scripts/smoke.py
 ```
 
-Open http://localhost:8000/docs for OpenAPI. `/health/live` reports process liveness;
+Open [the dashboard](http://localhost:8000/) or [OpenAPI](http://localhost:8000/docs).
+Run `docker compose exec -T api python -m scripts.demo_seed` to populate the dashboard.
+See the [cold-start walkthrough](docs/phase-6.md) for approvals and replay reports. `/health/live` reports process liveness;
 `/health/ready` requires PostgreSQL, the expected migration, and Redis.
 Only the API port is published, bound to loopback. The credentials are local-demo defaults.
 Choose a different `API_PORT` in `.env` if necessary. Passwords containing reserved URL
@@ -112,7 +114,7 @@ model comparison, abstention, and a SHAP notebook.
 3. Consent-gated rule decisions, eligibility, scheduling and reconciliation: see Phase 3.
 4. Degradation detection, diagnosis, temporal ML evaluation, SHAP: implemented as offline replays.
 5. [Matched monetary experiments](docs/phase-5.md): implemented as reproducible simulation runs.
-6. Dashboard and a documented cold-start demonstration.
+6. [Local dashboard and cold-start demonstration](docs/phase-6.md).
 
 Sandbox provider selection is deferred until the simulator is reliable. Bandits and LLMs
 are post-MVP. Synthetic performance will not be presented as real-world effectiveness.

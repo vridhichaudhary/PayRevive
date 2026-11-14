@@ -157,3 +157,11 @@ matched seeded cohorts. Retry arms share the production eligibility function.
 The synthetic readiness and background-settlement processes live in the
 experiment package. Seed-level paired differences provide net incremental
 recovery and uncertainty intervals without calling the online execution service.
+
+## Phase 6 implementation
+
+The [local dashboard](phase-6.md) uses the existing API origin. Its overview
+aggregates organization-scoped PostgreSQL payment state and lists pending
+approvals. Transaction history and approval updates use the existing
+endpoints. Offline synthetic reports live in a demo volume and carry no
+authority over recovery execution.

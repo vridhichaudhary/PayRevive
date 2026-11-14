@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PayRevive | Recovery operations</title>
+<link rel="stylesheet" href="/dashboard/assets/dashboard.css">
+<script src="/dashboard/assets/dashboard.js" defer></script>
+</head>
+<body>
+<header class="top"><div class="brand"><span class="brand-mark" aria-hidden="true">↗</span> PayRevive</div><span class="mode"><span></span> Local simulation · INR</span></header>
+<div class="layout">
+<aside><nav aria-label="Dashboard sections">
+<a href="#overview">Overview</a><a href="#payments">Payments</a><a href="#approvals">Approvals</a>
+<a href="#replays">Replay analysis</a><a href="#policy">Policy</a>
+</nav><a class="api" href="/docs">API reference ↗</a></aside>
+<main>
+<section id="overview">
+<div class="eyebrow">RECOVERY OPERATIONS</div>
+<div class="section-head"><h1>Payment overview</h1><button id="refresh" type="button">Refresh data</button></div>
+<p class="subtle" id="connection" role="status">Connecting to PayRevive…</p>
+<div class="metrics">
+<article><p>Failed amount</p><strong id="risk">—</strong><small id="risk-count">Current failed payments</small></article>
+<article><p>Settled amount</p><strong id="settled">—</strong><small id="settled-count">Current successful payments</small></article>
+<article><p>Pending amount</p><strong id="pending">—</strong><small id="pending-count">Current pending payments</small></article>
+</div>
+</section>
+<section class="panel" id="payments">
+<div class="section-head"><h2>Payments</h2><label>Status <select id="status"><option value="all">All statuses</option><option>failed</option><option>succeeded</option><option>pending</option></select></label></div>
+<div class="scroll"><table><thead><tr><th scope="col">Reference</th><th scope="col">Status</th><th scope="col">Amount</th><th scope="col">Recorded UTC</th></tr></thead><tbody id="payment-rows"></tbody></table></div>
+<p id="payment-empty" class="subtle" hidden></p>
+<div class="pagination"><button id="previous" disabled>Previous</button><span id="page"></span><button id="next" disabled>Next</button></div>
+</section>
+<section class="panel" id="detail" hidden>
+<div class="section-head"><h2>Payment timeline</h2><button id="close-detail">Close</button></div>
+<div id="detail-body" aria-live="polite"></div>
+</section>
+<section class="panel" id="approvals"><h2>Pending approvals</h2><p class="subtle">Up to 50 simulator actions awaiting an operator decision.</p><div id="approval-rows"></div><p id="action-message" role="status"></p></section>
+<section id="replays"><div class="eyebrow">OFFLINE SYNTHETIC RESULTS</div><h2>Replay analysis</h2>
+<div class="analysis"><article class="panel"><h3>Degradation detection</h3><div id="detection"></div></article>
+<article class="panel"><h3>Failure diagnosis and SHAP</h3><div id="diagnosis"></div></article>
+<article class="panel wide"><h3>Recovery experiment</h3><div id="experiment"></div></article></div></section>
+<section class="panel" id="policy"><h2>Active recovery rules</h2><div id="rules"></div></section>
+</main></div>
+</body></html>

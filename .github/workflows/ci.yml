@@ -28,6 +28,8 @@ jobs:
       - run: docker compose exec -T api python scripts/simulator_smoke.py
       - run: docker compose exec -T api python scripts/features_smoke.py
       - run: docker compose exec -T api python scripts/recovery_smoke.py
+      - run: docker compose exec -T api python -m scripts.demo_seed
+      - run: docker compose exec -T api python -m scripts.dashboard_smoke
       - name: Ensure serving image excludes notebook tooling
         run: >-
           docker compose exec -T api python -c
@@ -38,6 +40,8 @@ jobs:
       - run: docker compose exec -T api python scripts/simulator_smoke.py
       - run: docker compose exec -T api python scripts/features_smoke.py
       - run: docker compose exec -T api python scripts/recovery_smoke.py
+      - run: docker compose exec -T api python -m scripts.demo_seed
+      - run: docker compose exec -T api python -m scripts.dashboard_smoke
       - if: failure()
         run: docker compose logs --no-color
       - if: always()

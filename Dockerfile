@@ -9,7 +9,8 @@ COPY scripts ./scripts
 COPY simulator ./simulator
 COPY ml ./ml
 COPY experiments ./experiments
-RUN uv sync --frozen --no-dev && useradd --uid 10001 --create-home appuser
+RUN uv sync --frozen --no-dev && useradd --uid 10001 --create-home appuser \
+    && install -d -o appuser -g appuser /home/appuser/demo-reports
 USER appuser
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
