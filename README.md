@@ -107,7 +107,7 @@ a fixed-threshold comparison, and an executable notebook with synthetic incident
 [Phase 4C](docs/phase-4c.md) adds offline per-payment diagnosis, temporal
 model comparison, abstention, and a SHAP notebook.
 
-## Next phases
+## Implemented milestones
 
 1. Domain model, ownership, ingestion, audit, outbox: implemented; see Phase 1 verification.
 2. Synthetic ecosystem, separate incident truth, reports and replayable ingestion: see Phase 2.
@@ -115,6 +115,8 @@ model comparison, abstention, and a SHAP notebook.
 4. Degradation detection, diagnosis, temporal ML evaluation, SHAP: implemented as offline replays.
 5. [Matched monetary experiments](docs/phase-5.md): implemented as reproducible simulation runs.
 6. [Local dashboard and cold-start demonstration](docs/phase-6.md).
+
+See the [five-minute demo and interview guide](docs/demo-and-interview.md) for a walkthrough and measured results.
 
 Sandbox provider selection is deferred until the simulator is reliable. Bandits and LLMs
 are post-MVP. Synthetic performance will not be presented as real-world effectiveness.
