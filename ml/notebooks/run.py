@@ -30,6 +30,11 @@ def execute_notebook(
     verified = load_operational(dataset)
     source = notebook.read_bytes()
     nb = nbformat.reads(source.decode(), as_version=4)
+    report_kind = nb.metadata.get("payrevive_report", "audit")
+    if report_kind not in ("audit", "detection"):
+        raise ValueError(f"Unsupported notebook report: {report_kind}")
+    if report_kind == "detection" and until is not None:
+        raise ValueError("--until applies only to the data audit notebook")
     for cell in nb.cells:
         if cell.cell_type == "code":
             cell.outputs = []
@@ -74,7 +79,7 @@ def execute_notebook(
             environment = {
                 **os.environ,
                 "PAYREVIVE_NOTEBOOK_DATASET": str(dataset),
-                "PAYREVIVE_NOTEBOOK_OUTPUT": str(stage / "audit"),
+                "PAYREVIVE_NOTEBOOK_OUTPUT": str(stage / report_kind),
                 "PAYREVIVE_EXPECTED_MANIFEST": verified.manifest_sha256,
                 "PAYREVIVE_NOTEBOOK_UNTIL": until or "",
                 "IPYTHONDIR": str(kernel_root / "ipython"),
@@ -102,9 +107,11 @@ def execute_notebook(
                 if manager.has_kernel:
                     manager.shutdown_kernel(now=True)
                 manager.cleanup_resources()
-            audit = json.loads((stage / "audit/audit.json").read_text())
-            if audit["environment"]["python_executable"] != sys.executable:
+            report = json.loads((stage / report_kind / f"{report_kind}.json").read_text())
+            if report["environment"]["python_executable"] != sys.executable:
                 raise RuntimeError("Notebook ran in a different Python environment")
+            if report["provenance"]["source_manifest_sha256"] != verified.manifest_sha256:
+                raise RuntimeError("Notebook report refers to a different dataset")
             nb.metadata["payrevive"] = {
                 "source_manifest_sha256": verified.manifest_sha256,
                 "source_notebook_sha256": hashlib.sha256(source).hexdigest(),
@@ -121,7 +128,12 @@ def execute_notebook(
                 "source_notebook": notebook.name,
                 "runner_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                 "kernel_python": sys.executable,
-                "explore_until_exclusive": audit["provenance"]["explore_until_exclusive"],
+                "report_kind": report_kind,
+                **(
+                    {"explore_until_exclusive": report["provenance"]["explore_until_exclusive"]}
+                    if report_kind == "audit"
+                    else {}
+                ),
                 "fresh_kernel": True,
                 "synthetic_only": True,
                 "files": {
@@ -136,7 +148,7 @@ def execute_notebook(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Execute and render the real data-audit notebook")
+    parser = argparse.ArgumentParser(description="Execute and render a PayRevive analysis notebook")
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--notebook", type=Path)

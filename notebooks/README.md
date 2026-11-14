@@ -68,3 +68,12 @@ to the optional `analysis` group and is explicitly checked absent from the servi
 Degradation detection, then diagnosis/model comparison/SHAP, will be added with their actual
 working modules and evaluations. A financial-experiment notebook follows the experiment engine.
 There are no placeholder notebooks or fabricated results for those future milestones.
+
+## Degradation detection
+
+Open `02_degradation_detection.ipynb` from a kernel with the locked analysis
+environment. Set `PAYREVIVE_NOTEBOOK_DATASET` to the dataset directory when using
+an export other than the default `work/datasets/demo`. Follow the
+[degradation guide](../docs/phase-4b.md) for the fresh-kernel command, comparison
+scenarios, and actual results. CI publishes the executed smoke artifact as
+`degradation-detection-notebook`.

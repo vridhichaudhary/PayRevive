@@ -134,3 +134,10 @@ and notebooks are explanatory clients of tested analysis modules. A dedicated op
 analysis environment and CI job execute the first data-audit notebook; the serving image
 contains no notebook dependencies. Phase 4 remains incomplete until detection, diagnosis,
 temporal evaluation/model comparison, and SHAP are implemented and evaluated.
+
+## Phase 4B implementation
+
+[Degradation detection](phase-4b.md) replays operational outcomes into daily
+organization/issuer and organization/gateway windows. Alert scoring uses preceding
+calendar days and stays independent of the evaluation-only incident labels. The
+notebook uses the same report module as the CLI.

@@ -98,7 +98,10 @@ Generate the dataset first using the command above. Open `work/analysis/data-aud
 without Jupyter, or use [the notebook instructions](notebooks/README.md) for interactive work.
 The notebook imports tested modules; there is no duplicate ML implementation. Read
 [Phase 4A](docs/phase-4a.md) and [actual audit findings](docs/experiment_reports/data-audit-v1.md).
-Snapshots can be imported with `simulator.ingest ... --with-features`. No model is trained yet.
+Snapshots can be imported with `simulator.ingest ... --with-features`.
+
+[Phase 4B](docs/phase-4b.md) adds daily issuer and gateway degradation detection,
+a fixed-threshold comparison, and an executable notebook with synthetic incident metrics.
 
 ## Next phases
 

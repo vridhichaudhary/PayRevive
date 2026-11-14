@@ -54,3 +54,12 @@ jobs:
           name: data-audit-notebook
           path: work/notebook-report/
           if-no-files-found: error
+      - run: >-
+          uv run --group analysis python -m ml.notebooks.run
+          --notebook notebooks/02_degradation_detection.ipynb
+          --dataset work/notebook-input --output work/detection-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: degradation-detection-notebook
+          path: work/detection-report/
+          if-no-files-found: error

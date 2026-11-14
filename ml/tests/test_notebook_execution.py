@@ -8,19 +8,26 @@ import pytest
 pytestmark = pytest.mark.analysis
 
 
-def test_clean_kernel_matches_module_results_and_preserves_source(tmp_path):
+@pytest.mark.parametrize("kind", ["audit", "detection"])
+def test_clean_kernel_matches_module_results_and_preserves_source(tmp_path, kind):
     from ml.analysis.audit import run_audit
+    from ml.analysis.degradation import run_detection
     from ml.notebooks.run import execute_notebook
     from simulator.artifacts import export_dataset
     from simulator.config import GeneratorConfig
 
     dataset, output = tmp_path / "dataset", tmp_path / "notebook"
     export_dataset(GeneratorConfig(customers=60), dataset)
-    notebook = Path(__file__).parents[2] / "notebooks/01_data_and_feature_audit.ipynb"
+    name, run = {
+        "audit": ("01_data_and_feature_audit.ipynb", run_audit),
+        "detection": ("02_degradation_detection.ipynb", run_detection),
+    }[kind]
+    notebook = Path(__file__).parents[2] / "notebooks" / name
     source = notebook.read_bytes()
-    expected = run_audit(dataset, tmp_path / "cli-audit")
-    manifest = execute_notebook(dataset, output)
-    actual = json.loads((output / "audit/audit.json").read_text())
+    expected = run(dataset, tmp_path / "cli-report")
+    manifest = execute_notebook(dataset, output, notebook if kind == "detection" else None)
+    actual = json.loads((output / kind / f"{kind}.json").read_text())
+    assert manifest["report_kind"] == kind
     assert actual == expected
     assert actual["environment"]["python_executable"] == sys.executable
     assert notebook.read_bytes() == source
