@@ -1,122 +1,145 @@
 # PayRevive
 
-Simulation-first revenue recovery and payment intelligence for subscription card payments.
-Initial demonstration: one organization, INR, local execution, no real money.
+PayRevive is a payment recovery simulator for INR subscription card payments. It
+tracks failed payments, flags issuer and gateway degradation, diagnoses ambiguous
+declines, and compares retry policies against a matched control. The dashboard
+brings payment timelines, simulator approvals, and replay results into one place.
 
-The intended MVP combines degradation detection, failure diagnosis, SHAP, deterministic
-recovery/eligibility, safe execution, auditability, and reproducible monetary experiments.
-**Current implementation: foundations, transactional ingestion, a reproducible synthetic
-ecosystem, and consent-gated rule-based recovery through a persistent execution simulator.**
-No trained models or incremental-revenue evaluation exist yet. See [Phase 1](docs/phase-1.md) for the domain and API contract.
-See [Phase 0 verification](docs/phase-0.md) and [architecture](docs/architecture.md).
+## Run the demo
 
-## Run locally
-
-Prerequisites: a running Docker engine and Docker Compose v2+, with port 8000 available.
-From the repository root:
+Use Docker with Compose v2 and an available local port 8000.
 
 ```sh
+git clone https://github.com/vridhichaudhary/PayRevive.git
+cd PayRevive
 cp .env.example .env
 docker compose up --build --wait --wait-timeout 180
-docker compose exec -T api python scripts/smoke.py
+docker compose exec -T api python -m scripts.demo_seed
+docker compose exec -T api python -m scripts.dashboard_smoke
 ```
 
-Open [the dashboard](http://localhost:8000/) or [OpenAPI](http://localhost:8000/docs).
-Run `docker compose exec -T api python -m scripts.demo_seed` to populate the dashboard.
-See the [cold-start walkthrough](docs/phase-6.md) for approvals and replay reports. `/health/live` reports process liveness;
-`/health/ready` requires PostgreSQL, the expected migration, and Redis.
-Only the API port is published, bound to loopback. The credentials are local-demo defaults.
-Choose a different `API_PORT` in `.env` if necessary. Passwords containing reserved URL
-characters need URL encoding in the database URL; use the supplied defaults for this demo.
+Open the [dashboard](http://localhost:8000/) or [API reference](http://localhost:8000/docs).
+The seed imports 65 synthetic payment histories with feature snapshots and creates
+`dashboard-demo-approval` under the default recovery rules. Open that payment to
+inspect its failure and recovery decision. Approve the simulator retry, then refresh
+the timeline after the worker records the outcome. A simulated retry can succeed or fail.
 
-Compose starts PostgreSQL and Redis, applies Alembic migrations, then starts API and worker.
-No manual SQL or separate migration command is needed for initial startup.
+The dashboard seed also generates detection and monetary reports. Load the optional
+diagnosis report using the commands below. Repeating the seed reuses record identities
+and preserves approval history. Set `API_PORT` in `.env` to change the browser port.
+`docker compose down` preserves the database and report volumes.
 
-```sh
-docker compose ps
-docker compose logs api worker migrate
-docker compose run --rm migrate
-docker compose down
+## What it does
+
+| Capability | Behavior |
+| --- | --- |
+| Payment ingestion | Tracks obligations, attempts, and observed events separately. Duplicate deliveries reuse the original records, and older observations stay in history without replacing newer state. |
+| Recovery | Proposes retries from recorded decline reasons. Execution rechecks eligibility, including consent, cooldown, attempt budget, payment state, and any required operator approval. |
+| Durable execution | Persists action state, audit events, and simulator receipts. The scheduler dispatches due work and the worker reconciles uncertain outcomes. |
+| Degradation detection | Compares daily issuer and gateway decline rates against a fixed threshold and a rolling baseline. Incident truth is opened during replay evaluation. |
+| Failure diagnosis | Uses a specific reported cause directly. Offline models compare majority, logistic regression, and random forest baselines for ambiguous failures, with abstention and probability-space SHAP explanations. |
+| Monetary evaluation | Replays no intervention, fixed-delay retries, and reason-based retries with matched customer populations and shared settlement outcomes. Reports net incremental INR and paired bootstrap intervals. |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Generator[Synthetic payment generator] --> API[FastAPI]
+    Dashboard[Browser dashboard] <--> API
+    API <--> DB[(PostgreSQL)]
+    Scheduler[Celery Beat] --> Queue[(Redis)]
+    Queue --> Worker[Celery worker]
+    Worker <--> DB
+    Worker --> Simulator[Execution simulator]
+    Simulator --> DB
+    Generator --> Replay[Offline analysis and experiments]
+    Replay --> Reports[Generated reports]
+    Reports --> API
 ```
 
-`down` preserves named database/Redis volumes. `down --volumes` destroys this project's
-local data: use it only when intentionally resetting the demonstration.
-Do not run multiple independent migration processes concurrently.
+PostgreSQL owns payment state, execution schedules, feature provenance, and audit
+history. Redis transports work. Alembic applies schema migrations during Compose startup.
+The dashboard uses HTML, CSS, and JavaScript served by FastAPI. Training, evaluation,
+and notebooks run in an optional analysis environment. The online recovery path uses
+deterministic rules and recorded evidence.
 
-## Develop and test
+## Measured results
 
-Install uv and Python 3.13, then:
+| Evaluation | Synthetic result |
+| --- | --- |
+| Degradation | Both detectors caught all three injected incidents within 24 hours in each of two runs. The fixed threshold raised 3 false alerts across those runs compared with 16 for the rolling baseline. Both runs share the same incident schedule. |
+| Diagnosis | The selected forest reached 0.307 macro F1 on the March test split. It diagnosed 244 of 471 ambiguous failures at 78.7% accuracy among accepted cases. Risk-block F1 was zero. |
+| Recovery | Across 100 matched seeds, fixed 48-hour retry averaged ₹43,448.11 net incremental per 500-customer cohort, with a 95% interval of ₹41,464.47–₹45,451.16. Reason-based retry averaged ₹19,087.24. |
 
-```sh
-uv sync --frozen
-uv run ruff check .
-uv run ruff format --check .
-uv run pytest -q -W error
-docker compose --profile test run --build --rm test-runner
-uv run alembic -c backend/alembic.ini upgrade head --sql
-docker compose config --quiet
-```
+Net incremental recovery subtracts matched control settlement and retry costs.
+When simulated payments became ready four times faster, the fixed schedule's advantage
+over reason-based retry fell to ₹1.65 per cohort. The intervals describe variation across
+simulation seeds under the specified assumptions. The dashboard seed uses a smaller run.
 
-Python dependencies are pinned in `uv.lock`. Docker installs the frozen runtime dependencies;
-unit tests use the development group. The integration smoke test deliberately uses a real
-worker, not Celery eager mode. CI runs both unit and container integration checks, then
-repeats migration and startup against retained volumes.
+## Reproduce the analysis
 
-If uv's default cache is inaccessible, prefix uv commands with `UV_CACHE_DIR=/tmp/payrevive-uv-cache`.
-`.env` supplies Compose interpolation; direct Python execution reads the shell's
-`PAYREVIVE_*` environment variables, not `.env` automatically.
-
-## Generate synthetic data
-
-```sh
-uv run python -m simulator.run --config simulator/configs/baseline.json --output work/datasets/demo
-uv run python -m simulator.ingest work/datasets/demo --limit 50
-```
-
-Start the API before ingestion. Repeat ingestion to check idempotency. Export paths must be
-new. Open `work/datasets/demo/reports/incidents.png` to inspect injected degradation.
-Read [the Phase 2 guide](docs/phase-2.md) and [dataset card](docs/dataset_card.md) for assumptions,
-operational/truth boundaries, reproducibility, and limitations. Generated files are not committed.
-
-## Try safe recovery
-
-```sh
-docker compose exec -T api python scripts/recovery_smoke.py
-```
-
-The API exposes online customer consent, recommendations, approvals, action state, and
-reconciliation. Existing unlinked payments are not automatically granted retry permission.
-See [Phase 3](docs/phase-3.md) for the state machine, assumptions, examples, and safety tests.
-Compose now also runs one Celery Beat scheduler; PostgreSQL owns all due times and state.
-
-## Data science and notebooks
+Install Python 3.13 and uv. Each generator and report command requires a new output
+directory. The generator uses versioned seeds and separates operational records from
+hidden labels and injected incident intervals.
 
 ```sh
 uv sync --frozen --group analysis
-uv run --group analysis python -m ml.notebooks.run --dataset work/datasets/demo --output work/analysis/data-audit
+uv run --group analysis python -m simulator.run --config simulator/configs/baseline.json --output work/datasets/demo
+uv run --group analysis python -m ml.analysis.degradation --dataset work/datasets/demo --output work/detection
+uv run --group analysis python -m ml.analysis.diagnosis --dataset work/datasets/demo --output work/diagnosis
+uv run --group analysis python -m experiments.report --output work/experiment
+uv run --group analysis python -m experiments.report --config experiments/fast-readiness.json --output work/experiment-fast
 ```
 
-Generate the dataset first using the command above. Open `work/analysis/data-audit/report.html`
-without Jupyter, or use [the notebook instructions](notebooks/README.md) for interactive work.
-The notebook imports tested modules; there is no duplicate ML implementation. Read
-[Phase 4A](docs/phase-4a.md) and [actual audit findings](docs/experiment_reports/data-audit-v1.md).
-Snapshots can be imported with `simulator.ingest ... --with-features`.
+Diagnosis fits on January, chooses the model and threshold on February, and evaluates
+on March. For the independent seed and shifted calendar, generate an export with
+`simulator/configs/detection-challenge.json` and pass its directory with `--challenge`
+to the diagnosis command. For fresh-kernel HTML reports, see
+[notebook commands](notebooks/README.md). The experiment exports per-seed results,
+configuration, intervals, a comparison chart, and checksums.
 
-[Phase 4B](docs/phase-4b.md) adds daily issuer and gateway degradation detection,
-a fixed-threshold comparison, and an executable notebook with synthetic incident metrics.
-[Phase 4C](docs/phase-4c.md) adds offline per-payment diagnosis, temporal
-model comparison, abstention, and a SHAP notebook.
+Load the trusted local diagnosis JSON into the dashboard's report volume, then refresh:
 
-## Implemented milestones
+```sh
+docker compose exec -T api sh -c '
+  dir="$PAYREVIVE_DEMO_REPORTS/diagnosis"
+  mkdir -p "$dir" &&
+  cat > "$dir/.pending" &&
+  mv "$dir/.pending" "$dir/diagnosis.json"
+' < work/diagnosis/diagnosis.json
+```
 
-1. Domain model, ownership, ingestion, audit, outbox: implemented; see Phase 1 verification.
-2. Synthetic ecosystem, separate incident truth, reports and replayable ingestion: see Phase 2.
-3. Consent-gated rule decisions, eligibility, scheduling and reconciliation: see Phase 3.
-4. Degradation detection, diagnosis, temporal ML evaluation, SHAP: implemented as offline replays.
-5. [Matched monetary experiments](docs/phase-5.md): implemented as reproducible simulation runs.
-6. [Local dashboard and cold-start demonstration](docs/phase-6.md).
+To import a generated dataset with feature provenance, run
+`uv run --group analysis python -m simulator.ingest work/datasets/demo --limit 50 --with-features`
+while the API is running.
 
-See the [five-minute demo and interview guide](docs/demo-and-interview.md) for a walkthrough and measured results.
+## Development and verification
 
-Sandbox provider selection is deferred until the simulator is reliable. Bandits and LLMs
-are post-MVP. Synthetic performance will not be presented as real-world effectiveness.
+```sh
+uv sync --frozen --group analysis
+uv run --group analysis ruff check .
+uv run --group analysis pytest -q -W error
+uv run --group analysis pytest -m analysis -q -W error
+docker compose --profile test run --build --rm test-runner
+docker compose exec -T api python scripts/recovery_smoke.py
+```
+
+[GitHub Actions](https://github.com/vridhichaudhary/PayRevive/actions) runs the unit
+tests, real PostgreSQL integration tests, Docker startup and restart checks, recovery
+smoke tests, and notebook execution. `/health/live` checks the process.
+`/health/ready` checks PostgreSQL, the schema revision, and Redis.
+
+| Directory | Contents |
+| --- | --- |
+| [backend/](backend/) | API, database migrations, event ingestion, recovery worker, dashboard, and integration tests |
+| [simulator/](simulator/) | Seeded data generator and local API ingestion |
+| [ml/](ml/) | Feature loading, degradation detection, diagnosis, evaluation, and SHAP |
+| [notebooks/](notebooks/) | Executable audit, detection, and diagnosis notebooks |
+| [experiments/](experiments/) | Paired policy replay and monetary reporting |
+| [scripts/](scripts/) | Demo setup and end-to-end smoke checks |
+
+## Scope
+
+PayRevive uses synthetic INR data, simulated execution, and one local demo organization.
+Production authentication, public deployment, and payment provider integration are
+outside the current scope. The replay results describe the simulator scenarios.

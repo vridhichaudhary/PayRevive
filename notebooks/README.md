@@ -56,7 +56,7 @@ Commit notebook source with cleared outputs. Publish executed notebooks/HTML thr
 CI `data-audit-notebook` artifact, which uses a 300-customer real generated smoke dataset.
 The full local/default report uses 6,000 customers. Dataset identity/configuration is recorded
 so these reports cannot be mistaken for one another. Small reviewed findings can be documented
-in `docs/experiment_reports/`; raw generated records and large execution artifacts stay out of Git.
+in the [project README](../README.md); raw generated records and large execution artifacts stay out of Git.
 
 Reusable exploratory code must move into a tested module when retained; replace the cell
 with an import/call. Keep meaningful Markdown questions, conclusions, alternatives, and limits.
@@ -74,13 +74,13 @@ There are no placeholder notebooks or fabricated results for those future milest
 Open `02_degradation_detection.ipynb` from a kernel with the locked analysis
 environment. Set `PAYREVIVE_NOTEBOOK_DATASET` to the dataset directory when using
 an export other than the default `work/datasets/demo`. Follow the
-[degradation guide](../docs/phase-4b.md) for the fresh-kernel command, comparison
+[degradation guide](../README.md#reproduce-the-analysis) for the fresh-kernel command, comparison
 scenarios, and actual results. CI publishes the executed smoke artifact as
 `degradation-detection-notebook`.
 
 ## Failure diagnosis
 
 Open `03_failure_diagnosis.ipynb` in the locked analysis environment. The
-[diagnosis guide](../docs/phase-4c.md) gives the fresh-kernel command and
+[diagnosis guide](../README.md#reproduce-the-analysis) gives the fresh-kernel command and
 explains the temporal comparison, abstention, and SHAP results. CI publishes
 an executed smoke report as `failure-diagnosis-notebook`.

@@ -1,6 +1,6 @@
 # PayRevive development contract
 
-Read README.md and docs/architecture.md before changes. Work phase by phase; do not mark a
+Read README.md before changes. Work phase by phase; do not mark a
 phase complete or proceed past unresolved acceptance failures. Explain major designs first.
 Use a modular monolith. PostgreSQL is the business source of truth; Redis transports work.
 Initial domain: subscription cards, INR, one explicit demo organization; preserve future
@@ -30,5 +30,3 @@ modules. Focused notebooks import those modules to explain real generated-data e
 No duplicated business/ML implementation, hidden cell state, hand-edited metrics, or runtime
 Jupyter dependency. Run notebooks from a fresh kernel with manifests and pinned dependencies;
 publish executed reports as artifacts. The serving image must not install notebook tooling.
-The first milestone is Phase 4A: shared feature provenance and the data/feature audit notebook.
-Do not mark the whole Phase 4 complete before detection, diagnosis, temporal evaluation and SHAP.
