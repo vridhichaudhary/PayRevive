@@ -1,0 +1,5 @@
+{
+  "customers": 30,
+  "runs": 4,
+  "bootstrap_draws": 100
+}

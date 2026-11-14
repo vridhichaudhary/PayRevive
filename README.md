@@ -111,7 +111,7 @@ model comparison, abstention, and a SHAP notebook.
 2. Synthetic ecosystem, separate incident truth, reports and replayable ingestion: see Phase 2.
 3. Consent-gated rule decisions, eligibility, scheduling and reconciliation: see Phase 3.
 4. Degradation detection, diagnosis, temporal ML evaluation, SHAP: implemented as offline replays.
-5. Comparable monetary experiments with seeds, controls, and uncertainty intervals.
+5. [Matched monetary experiments](docs/phase-5.md): implemented as reproducible simulation runs.
 6. Dashboard and a documented cold-start demonstration.
 
 Sandbox provider selection is deferred until the simulator is reliable. Bandits and LLMs

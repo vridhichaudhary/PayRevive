@@ -149,3 +149,11 @@ failures. Explicit reported reasons and abstention remain distinct outcomes.
 Temporal training and evaluation live in shared analysis modules. SHAP explains
 the selected model's class probabilities. The recovery flow continues to apply
 its deterministic rules and eligibility checks independently.
+
+## Phase 5 implementation
+
+[Monetary recovery experiments](phase-5.md) replay three policies against
+matched seeded cohorts. Retry arms share the production eligibility function.
+The synthetic readiness and background-settlement processes live in the
+experiment package. Seed-level paired differences provide net incremental
+recovery and uncertainty intervals without calling the online execution service.

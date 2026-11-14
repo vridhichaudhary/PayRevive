@@ -37,10 +37,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["backend/app", "simulator", "ml"]
+packages = ["backend/app", "simulator", "ml", "experiments"]
 
 [tool.pytest.ini_options]
-testpaths = ["backend/tests", "simulator/tests", "ml/tests"]
+testpaths = ["backend/tests", "simulator/tests", "ml/tests", "experiments/tests"]
 addopts = "-m 'not postgres and not analysis'"
 markers = ["postgres: real isolated PostgreSQL integration tests",
     "analysis: optional analysis environment and clean-kernel notebook execution"]

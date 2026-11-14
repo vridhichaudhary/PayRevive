@@ -15,6 +15,12 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest
+      - run: uv run python -m experiments.report --config experiments/smoke.json --output work/experiment-smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recovery-experiment-smoke
+          path: work/experiment-smoke/
+          if-no-files-found: error
       - run: docker compose config --quiet
       - run: docker compose up --build --wait --wait-timeout 180
       - run: docker compose --profile test run --build --rm test-runner
