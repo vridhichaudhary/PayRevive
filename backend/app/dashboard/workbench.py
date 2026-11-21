@@ -178,7 +178,9 @@ def case(org_id: UUID, payment_id: UUID, request: Request):
                 row[key] = str(row[key])
     timeline = []
     for name, time in (
+        ("attempts", "state_at"),
         ("events", "occurred_at"),
+        ("feature_snapshots", "observed_at"),
         ("recovery_decisions", "created_at"),
         ("recovery_actions", "created_at"),
         ("recovery_outcomes", "created_at"),

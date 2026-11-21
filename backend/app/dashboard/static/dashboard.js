@@ -55,7 +55,7 @@ async function timeline(id) {
   for(const item of d.timeline) {
     const r=item.record, entry=node("article",null,"record");
     entry.append(node("small",new Date(item.at).toISOString()),node("h3",label(item.type)),
-      node("p",label(r.kind || r.status || r.result || r.proposal?.kind)));
+      node("p",item.type === "attempts" ? `Attempt ${r.number} · ${r.status}` : label(r.kind || r.status || r.result || r.proposal?.kind)));
     if(r.reason) entry.append(node("p",label(r.reason)));
     const details=node("details");
     details.append(node("summary","Stored evidence"),node("pre",JSON.stringify(r,null,2)));
