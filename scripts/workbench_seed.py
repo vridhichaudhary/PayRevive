@@ -13,6 +13,8 @@ from app.db import build_engine
 from app.domain.tables import organizations
 from sqlalchemy.dialects.postgresql import insert
 
+from experiments.replay import ExperimentConfig
+from experiments.report import run
 from simulator.generator import canonical
 
 ORG = UUID("00000000-0000-0000-0000-000000000006")
@@ -118,6 +120,8 @@ def seed(client: httpx.Client):
         )
     send("POST", f"/payments/{payment['id']}/recommend")
     root = Path(os.environ.get("PAYREVIVE_DEMO_REPORTS", "work/demo-reports"))
+    if not (root / "experiment").exists():
+        run(ExperimentConfig(runs=30, customers=300), root / "experiment")
     directory = root / str(ORG) / "detection"
     directory.mkdir(parents=True, exist_ok=True)
     row = {
