@@ -19,6 +19,15 @@ docker compose exec -T api python -m scripts.dashboard_smoke
 ```
 
 Open the [dashboard](http://localhost:8000/) or [API reference](http://localhost:8000/docs).
+For an isolated workbench scenario, run `docker compose exec -T api python -m scripts.workbench_seed`
+and open `http://localhost:8000/?org=00000000-0000-0000-0000-000000000006#incidents`.
+Select the issuer exposure, open `workbench-issuer-exposure`, and approve the simulator retry
+on the case. Refresh to read the persisted outcome. The scenario reuses identities on
+subsequent runs, so approvals and outcomes survive reseeding. Use a new Compose project
+for a new approval demonstration. The guided incident is a synthetic exposure fixture.
+Its window links to stored features by organization, dataset, source manifest, time and
+issuer. It makes no detector-performance claim.
+
 The seed imports 65 synthetic payment histories with feature snapshots and creates
 `dashboard-demo-approval` under the default recovery rules. Open that payment to
 inspect its failure and recovery decision. Approve the simulator retry, then refresh

@@ -50,3 +50,11 @@ pre{overflow:auto;background:var(--back);padding:10px;border-radius:6px;font-siz
 #replays>h2{margin-top:8px}
 @media(max-width:760px){.layout{display:block}aside{padding:8px 12px;border-bottom:1px solid var(--line);border-right:0;display:flex;align-items:center;flex-wrap:wrap}nav{display:flex;flex-wrap:wrap;gap:0}.api{margin:0}main{padding-top:18px}.analysis{grid-template-columns:1fr}}
 @media(max-width:530px){.metrics{grid-template-columns:1fr}.metrics article,.panel{padding:13px}.top{padding:12px}.mode{font-size:11px}}
+input{font:inherit;border:1px solid #adc4c1;border-radius:7px;padding:7px;max-width:100%}
+.view .panel{margin-top:18px}
+form label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+#message{font-size:14px;color:var(--muted);min-height:24px}
+[hidden]{display:none!important}
+a{color:var(--accent)}
+#case-body strong{font-size:30px}
+#case-body article h3{margin:6px 0}

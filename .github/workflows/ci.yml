@@ -42,6 +42,14 @@ jobs:
       - run: docker compose exec -T api python scripts/recovery_smoke.py
       - run: docker compose exec -T api python -m scripts.demo_seed
       - run: docker compose exec -T api python -m scripts.dashboard_smoke
+      - run: docker compose exec -T api python -m scripts.workbench_seed
+      - run: uv run --with playwright==1.56.0 python -m playwright install --with-deps chromium
+      - run: uv run --with playwright==1.56.0 python -m scripts.workbench_browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: workbench-browser
+          path: work/browser/
       - if: failure()
         run: docker compose logs --no-color
       - if: always()
