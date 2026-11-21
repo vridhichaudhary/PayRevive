@@ -21,7 +21,7 @@ def main():
             page.get_by_text("Incident issuer-demo · exposure match", exact=False)
         ).to_be_visible()
         page.get_by_role("link", name="workbench-issuer-exposure", exact=True).click()
-        expect(page.get_by_text("Awaiting approval", exact=False)).to_be_visible()
+        expect(page.get_by_role("button", name="Approve simulator retry")).to_be_visible()
         case_url = page.url
         payment_id = case_url.split("#case/")[1]
         before = page.request.get(f"{BASE}/payments/{payment_id}").json()
