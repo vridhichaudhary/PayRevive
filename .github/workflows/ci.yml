@@ -43,8 +43,15 @@ jobs:
       - run: docker compose exec -T api python -m scripts.demo_seed
       - run: docker compose exec -T api python -m scripts.dashboard_smoke
       - run: docker compose exec -T api python -m scripts.workbench_seed
-      - run: uv run --with playwright==1.56.0 python -m playwright install --with-deps chromium
-      - run: uv run --with playwright==1.56.0 python -m scripts.workbench_browser
+      - run: google-chrome --version
+      - name: Browser workbench acceptance
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run --with playwright==1.56.0 python -m scripts.workbench_browser 2>&1 | tee work/browser.log || {
+            echo "::error::$(tail -c 1800 work/browser.log | tr '\n' ' ')"
+            exit 1
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

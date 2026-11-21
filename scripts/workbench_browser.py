@@ -13,7 +13,7 @@ BASE = f"{URL}/v1/organizations/{ORG}"
 
 def main():
     with sync_playwright() as browser:
-        chromium = browser.chromium.launch()
+        chromium = browser.chromium.launch(channel="chrome")
         page = chromium.new_page(viewport={"width": 1440, "height": 1000})
         page.goto(f"{URL}/?org={ORG}#incidents")
         page.get_by_role("button", name="Investigate exposed subscriptions").click()
