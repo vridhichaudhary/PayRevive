@@ -123,12 +123,19 @@ def cases(
                 sa.func.coalesce(sa.func.sum(payments.c.amount_minor), 0),
             ).where(*condition)
         ).one()
+        awaiting = sa.exists(
+            sa.select(actions.c.id).where(
+                scope(actions, org_id),
+                actions.c.payment_id == payments.c.id,
+                actions.c.status == "awaiting_approval",
+            )
+        )
         rows = [
             dict(row)
             for row in c.execute(
                 sa.select(payments)
                 .where(*condition)
-                .order_by(payments.c.created_at.desc(), payments.c.id)
+                .order_by(awaiting.desc(), payments.c.created_at.desc(), payments.c.id)
                 .offset(offset)
                 .limit(limit)
             ).mappings()
