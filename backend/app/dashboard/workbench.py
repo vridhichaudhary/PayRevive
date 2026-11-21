@@ -39,12 +39,37 @@ def incidents_for(org_id: UUID):
     return data
 
 
+def exposure(org_id, data, incident):
+    return sa.exists(
+        sa.select(feature_snapshots.c.id).where(
+            scope(feature_snapshots, org_id),
+            feature_snapshots.c.payment_id == payments.c.id,
+            feature_snapshots.c.dataset_id == data["provenance"]["dataset_id"],
+            feature_snapshots.c.source_manifest_sha256
+            == data["provenance"]["source_manifest_sha256"],
+            feature_snapshots.c.observed_at >= datetime.fromisoformat(incident["starts_at"]),
+            feature_snapshots.c.observed_at < datetime.fromisoformat(incident["ends_at"]),
+            feature_snapshots.c["values"][incident["scope"]].astext == incident["target"],
+        )
+    )
+
+
 @router.get("/incidents")
 def incidents(org_id: UUID, request: Request):
     with request.app.state.engine.connect() as connection:
         require_org(connection, org_id)
     data = incidents_for(org_id)
     rows = data["evaluation"]["methods"]["rolling"]["incidents"]
+    with request.app.state.engine.connect() as c:
+        for row in rows:
+            count, failed = c.execute(
+                sa.select(
+                    sa.func.count(),
+                    sa.func.count().filter(payments.c.status == "failed"),
+                ).where(scope(payments, org_id), exposure(org_id, data, row))
+            ).one()
+            row["exposed_payments"] = count
+            row["currently_failed"] = failed
     return {
         "source": data["provenance"],
         "generated_at": data["generated_at"],
@@ -103,15 +128,8 @@ def cases(
         )
         if incident is None:
             raise DomainError(404, "Incident not found")
-        features += [
-            feature_snapshots.c.dataset_id == data["provenance"]["dataset_id"],
-            feature_snapshots.c.source_manifest_sha256
-            == data["provenance"]["source_manifest_sha256"],
-            feature_snapshots.c.observed_at >= datetime.fromisoformat(incident["starts_at"]),
-            feature_snapshots.c.observed_at < datetime.fromisoformat(incident["ends_at"]),
-            feature_snapshots.c["values"][incident["scope"]].astext == incident["target"],
-        ]
-    if incident_id or since or until:
+        condition.append(exposure(org_id, data, incident))
+    if since or until:
         condition.append(sa.exists(sa.select(feature_snapshots.c.id).where(*features)))
     with request.app.state.engine.connect().execution_options(
         isolation_level="REPEATABLE READ"

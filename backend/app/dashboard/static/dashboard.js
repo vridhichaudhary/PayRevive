@@ -99,6 +99,7 @@ async function load() {
       for(const r of d.incidents) {
         const c=node("article",null,"panel");
         c.append(node("h2",`${label(r.scope)} / ${r.target}`),node("p",`${r.starts_at} → ${r.ends_at}`),
+          node("p",`${r.exposed_payments} exposed payments · ${r.currently_failed} currently failed`),
           node("p",r.first_alert_at ? `First replay alert ${r.first_alert_at}` : "Guided fixture or no replay alert recorded"),
           button("Investigate exposed subscriptions",()=>{incident=r.incident_id;offset=0;location.hash="queue";}));
         el("incident-list").append(c);
@@ -107,7 +108,7 @@ async function load() {
     }
     if(view==="strategy"){
       const d=await api("/dashboard/reports/experiment");
-      el("strategy-body").replaceChildren(node("p",`${d.config.runs} matched seeds · ${d.config.customers} customers per cohort · ${d.config.horizon_hours} hour horizon`));
+      el("strategy-body").replaceChildren(node("p",`Report updated ${d.updated_at || "unavailable"} · ${d.config.runs} matched seeds · ${d.config.customers} customers per cohort · ${d.config.horizon_hours} hour horizon`));
       for(const r of d.contrasts.filter(x=>x.metric==="net_incremental_minor")){
         const c=node("article",null,"record");
         c.append(node("h3",`${label(r.policy)} vs ${label(r.comparison)}`),

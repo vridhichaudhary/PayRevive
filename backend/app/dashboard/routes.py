@@ -2,6 +2,7 @@
 
 import json
 import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
@@ -120,11 +121,15 @@ def report(kind: Literal["detection", "diagnosis", "experiment"]):
         raise DomainError(404, "Demo report has not been generated") from error
     except (OSError, ValueError) as error:
         raise DomainError(503, "Demo report is unavailable") from error
+    body["updated_at"] = datetime.fromtimestamp(
+        (report_root() / REPORTS[kind]).stat().st_mtime, UTC
+    ).isoformat()
     # Keep large raw seed rows out of dashboard responses.
     if kind == "experiment":
         return {
             key: body[key]
             for key in (
+                "updated_at",
                 "version",
                 "synthetic_only",
                 "config",
