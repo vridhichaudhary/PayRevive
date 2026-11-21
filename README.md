@@ -14,29 +14,30 @@ git clone https://github.com/vridhichaudhary/PayRevive.git
 cd PayRevive
 cp .env.example .env
 docker compose up --build --wait --wait-timeout 180
-docker compose exec -T api python -m scripts.demo_seed
-docker compose exec -T api python -m scripts.dashboard_smoke
+docker compose exec -T api python -m scripts.workbench_seed
 ```
 
-Open the [dashboard](http://localhost:8000/) or [API reference](http://localhost:8000/docs).
-For an isolated workbench scenario, run `docker compose exec -T api python -m scripts.workbench_seed`
-and open `http://localhost:8000/?org=00000000-0000-0000-0000-000000000006#incidents`.
-Select the issuer exposure, open `workbench-issuer-exposure`, and approve the simulator retry
-on the case. Refresh to read the persisted outcome. The scenario reuses identities on
-subsequent runs, so approvals and outcomes survive reseeding. Use a new Compose project
-for a new approval demonstration. The guided incident is a synthetic exposure fixture.
-Its window links to stored features by organization, dataset, source manifest, time and
-issuer. It makes no detector-performance claim.
+Open the [workbench](http://localhost:8000/?org=00000000-0000-0000-0000-000000000006#incidents)
+or [API reference](http://localhost:8000/docs).
 
-The seed imports 65 synthetic payment histories with feature snapshots and creates
-`dashboard-demo-approval` under the default recovery rules. Open that payment to
-inspect its failure and recovery decision. Approve the simulator retry, then refresh
-the timeline after the worker records the outcome. A simulated retry can succeed or fail.
+Select **Investigate exposed subscriptions**, open `workbench-issuer-exposure`, and
+approve the simulator retry on the case. Refresh to read the persisted outcome.
+The four views are Overview, Recovery Queue, Incidents, and Strategy Lab.
+Reference, payment-state and action-state filters query stored records. Case links
+preserve the organization and payment identity.
 
-The dashboard seed also generates detection and monetary reports. Load the optional
-diagnosis report using the commands below. Repeating the seed reuses record identities
-and preserves approval history. Set `API_PORT` in `.env` to change the browser port.
+The guided scenario has 24 exposed payments and makes no detector-performance claim.
+Its window matches stored feature observations by organization, dataset, source manifest,
+time, and issuer. Exposure is an investigation lead. The eligibility rules independently
+decide whether a retry can run. Strategy Lab shows a separate matched synthetic replay.
+
+The seed reuses identities and preserves approval history. Use a new Compose project
+(`docker compose -p payrevive-practice ...`) for a fresh approval walkthrough.
+Set `API_PORT` in `.env` to change the browser port.
 `docker compose down` preserves the database and report volumes.
+
+For the larger historical dataset and offline diagnosis reports, use
+`python -m scripts.demo_seed` in the API container and the analysis commands below.
 
 ## What it does
 
